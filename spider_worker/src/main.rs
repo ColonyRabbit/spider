@@ -1,5 +1,6 @@
 use spider::{tokio, utils, website::Website};
 use std::convert::Infallible;
+use std::time::Instant;
 use warp::{path::FullPath, Filter};
 
 #[macro_use]
@@ -202,7 +203,39 @@ async fn scrape(path: FullPath, host: String) -> Result<impl warp::Reply, Infall
 
     pack(data)
 }
+async fn test1(domain: &str) {
+    let mut website: Website = Website::new(domain);
 
+    website
+        .configuration
+        .with_respect_robots_txt(true)
+        .with_user_agent(Some("SpiderBot"))
+        .with_ignore_sitemap(true) // ignore running the sitemap on base crawl/scape methods. Remove or set to true to include the sitemap with the crawl.
+        .with_sitemap(Some("/sitemap/sitemap-0.xml"));
+
+    let start = Instant::now();
+
+    // crawl the sitemap first
+    website.crawl_sitemap().await;
+    // persist links to the next crawl
+    website.persist_links();
+    // crawl normal with links found in the sitemap extended.
+    website.crawl().await;
+
+    let duration = start.elapsed();
+
+    let links = website.get_all_links_visited().await;
+
+    for link in links.iter() {
+        println!("- {:?}", link.as_ref());
+    }
+
+    println!(
+        "Time elapsed in website.crawl() is: {:?} for total pages: {:?}",
+        duration,
+        links.len()
+    )
+}
 #[tokio::main]
 #[cfg(all(
     not(feature = "scrape"),
@@ -211,7 +244,8 @@ async fn scrape(path: FullPath, host: String) -> Result<impl warp::Reply, Infall
 ))]
 async fn main() {
     env_logger::init();
-
+    test1("https://www.heygoody.com").await;
+    // test2(domain).await;
     let host = warp::header::<String>("host");
     let referer = warp::header::optional::<String>("referer");
 

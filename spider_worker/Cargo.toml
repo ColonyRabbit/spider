@@ -20,7 +20,7 @@ maintenance = { status = "as-is" }
 warp = "0.3.7"
 lazy_static = "1"
 env_logger = "0.11"
-
+hyper = "0.14"
 [dependencies.spider]
 version = "2"
 path = "../spider"

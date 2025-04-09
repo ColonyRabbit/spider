@@ -6220,6 +6220,7 @@ name = "spider_worker"
 version = "2.36.44"
 dependencies = [
  "env_logger",
+ "hyper 0.14.32",
  "lazy_static",
  "spider",
  "warp",
